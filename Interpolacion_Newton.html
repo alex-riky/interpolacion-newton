@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laboratorio · Interpolación polinomial de Newton</title>
+<style>
+:root{font-family:Segoe UI,Arial,sans-serif;color:#172a3b;background:#f3f6f8;font-size:16px}*{box-sizing:border-box}body{margin:0}main{max-width:1180px;margin:auto;padding:36px 24px 60px}header{margin-bottom:28px}.eyebrow{letter-spacing:.12em;font-size:.75rem;font-weight:700;color:#23666b}h1{font-size:clamp(1.7rem,4vw,2.7rem);line-height:1.15;margin:10px 0}h2{font-size:1.15rem;margin:0 0 16px}p{line-height:1.6}header p{color:#506477;max-width:780px}.grid{display:grid;grid-template-columns:330px 1fr;gap:22px;align-items:start}.card{background:white;border:1px solid #dce4ea;border-radius:16px;padding:24px;box-shadow:0 4px 18px #172a3b05}.stack{display:grid;gap:18px}label{font-weight:600;display:block;margin-bottom:9px}textarea,input{font:inherit;border:1px solid #b4c4d0;border-radius:8px;padding:12px;width:100%;color:#172a3b;background:#fff}textarea{min-height:220px;font-family:Consolas,monospace;line-height:1.6;resize:vertical}button{font:600 .93rem Segoe UI,Arial,sans-serif;cursor:pointer;border:1px solid #b9c8d2;border-radius:8px;background:white;color:#243e52;padding:11px 16px}.primary{background:#13656b;color:white;border-color:#13656b}button:hover{filter:brightness(.95)}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #2a8b9780;outline-offset:3px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.hint{font-size:.84rem;line-height:1.5;color:#5c6d7c}.status{padding:12px 14px;border-radius:8px;margin:16px 0 0;background:#f0f7f6;font-size:.88rem;line-height:1.5}.error{background:#fff0ef;color:#922f2a}.warning{background:#fff7e7;color:#78530e}[hidden]{display:none!important}.formula{font-family:Consolas,monospace;line-height:1.9;overflow-wrap:anywhere;padding:16px;background:#f1f6f7;border-radius:10px;font-size:.97rem}.meta{font-size:.85rem;color:#506477;margin:12px 0}.tablewrap{overflow:auto;max-height:440px}table{border-collapse:collapse;width:100%;font-size:.86rem;font-variant-numeric:tabular-nums}th,td{padding:10px 12px;border-bottom:1px solid #e0e7ec;text-align:right;white-space:nowrap}th{background:#edf3f5;color:#31536a;position:sticky;top:0}td:first-child,th:first-child{text-align:left}.coef{color:#126268;font-weight:700;background:#eff9f7}.eval{display:grid;grid-template-columns:minmax(100px,1fr) auto;gap:10px;align-items:end}.answer{font-family:Consolas,monospace;font-weight:700;font-size:1.2rem;line-height:1.5;margin-top:16px;padding:14px;border-radius:8px;background:#eff8f5}.steps li{margin-bottom:12px;line-height:1.6}details summary{cursor:pointer;font-weight:600}footer{margin-top:24px}.tag{font-size:.8rem;background:#e8f3f2;color:#14595e;border-radius:30px;padding:5px 10px;display:inline-block;margin-top:4px}@media(max-width:800px){.grid{grid-template-columns:1fr}main{padding:24px 16px}.card{padding:20px}.eval{grid-template-columns:1fr}}@media print{body{background:white}main{max-width:none;padding:0}.grid{display:block}.card{box-shadow:none;break-inside:avoid;margin-bottom:16px}button,.actions,.inputcard{display:none}.tablewrap{max-height:none;overflow:visible}th{position:static}.formula{background:#f6f6f6}}
+</style>
+</head>
+<body><main>
+<header><div class="eyebrow">MÉTODOS NUMÉRICOS · LABORATORIO</div><h1>Interpolación polinomial de Newton</h1><p>Introduce puntos con valores de x distintos. El programa construye la tabla de diferencias divididas, obtiene el polinomio interpolante y permite evaluarlo sin instalar programas ni conectarse a internet.</p></header>
+<div class="grid"><section class="card inputcard"><h2>1. Ingresa los puntos</h2><label for="points">Un par x, y por línea</label><textarea id="points" spellcheck="false" aria-describedby="format">-1, 2
+0, 1
+2, 5
+3, 22</textarea><p id="format" class="hint">Usa punto decimal. Puedes separar x e y con coma, punto y coma, espacio o tabulación. Se admiten nodos no equidistantes y notación científica, por ejemplo: 1e-3, 2.5.</p><div class="actions"><button id="calculate" class="primary">Calcular polinomio</button><button id="example">Ejemplo</button><button id="clear">Limpiar</button></div><div id="status" class="status" role="status" aria-live="polite"></div></section>
+<div class="stack"><section class="card"><h2>2. Polinomio interpolante</h2><div id="empty" class="hint">El resultado aparecerá aquí después de calcular.</div><div id="results" hidden><span id="degree" class="tag"></span><p class="meta">Forma de Newton · el orden de los nodos se conserva</p><div id="newton" class="formula"></div><details style="margin-top:16px"><summary>Ver forma desarrollada y coeficientes</summary><p id="expanded" class="formula"></p><p id="coefficients" class="hint"></p></details><p id="residual" class="hint"></p><div class="actions"><button id="download">Descargar procedimiento (.txt)</button><button id="print">Imprimir / guardar PDF</button></div></div></section>
+<section id="tablecard" class="card" hidden><h2>3. Tabla de diferencias divididas</h2><p class="hint">Los valores destacados de la primera fila son los coeficientes de Newton. Los guiones indican posiciones que no se requieren.</p><div id="table" class="tablewrap"></div></section>
+<section id="evalcard" class="card" hidden><h2>4. Evalúa el polinomio</h2><div class="eval"><div><label for="evaluateAt">Valor de x</label><input id="evaluateAt" type="text" inputmode="decimal" value="1" autocomplete="off"></div><button id="evaluate" class="primary">Evaluar P(x)</button></div><div id="answer" class="answer" aria-live="polite"></div></section>
+<section class="card"><h2>¿Cómo funciona?</h2><ol class="steps"><li>Se asigna <strong>f[xᵢ] = yᵢ</strong> a la primera columna.</li><li>Para cada orden j se aplica:<div class="formula">f[xᵢ, …, xᵢ₊ⱼ] = (f[xᵢ₊₁, …, xᵢ₊ⱼ] − f[xᵢ, …, xᵢ₊ⱼ₋₁]) / (xᵢ₊ⱼ − xᵢ)</div></li><li>Se toman los coeficientes aⱼ = f[x₀, …, xⱼ] y se construye:<div class="formula">P(x) = a₀ + a₁(x − x₀) + a₂(x − x₀)(x − x₁) + …</div></li><li>Se evalúa mediante multiplicación anidada, evitando desarrollar el polinomio para calcular un valor.</li></ol><p class="hint">Con n puntos distintos existe un único polinomio de grado a lo sumo n − 1 que pasa por todos ellos. El grado puede ser menor. No se necesita que los valores de x estén igualmente espaciados.</p></section></div></div>
+<footer class="hint">JavaScript · cálculo local · aritmética de doble precisión. Los grados elevados, nodos muy cercanos o valores extremos pueden producir errores numéricos. La extrapolación se identifica y debe interpretarse con precaución.</footer>
+</main>
+<script>
+'use strict';
+// Núcleo del método. Se mantiene separado de la interfaz para poder probarlo.
+function parsePoints(input){
+  const lines=input.trim().split(/\r?\n/).filter(s=>s.trim());
+  if(!input.trim()) throw new Error('Ingresa al menos un punto.');
+  const seen=new Set();
+  return lines.map((line,i)=>{
+    const parts=line.trim().replace(/−/g,'-').split(/[;,\s]+/);
+    if(parts.length!==2||parts.some(s=>!s)) throw new Error('La línea '+(i+1)+' debe contener exactamente dos números: x, y.');
+    const x=Number(parts[0]),y=Number(parts[1]);
+    if(!Number.isFinite(x)||!Number.isFinite(y)) throw new Error('La línea '+(i+1)+' contiene un valor no numérico o fuera de rango.');
+    if(seen.has(x)) throw new Error('El valor x = '+x+' está repetido. Newton requiere valores de x distintos.');
+    seen.add(x);return {x,y};
+  });
+}
+function interpolate(points){
+  const n=points.length;
+  if(!n)throw new Error('Se requiere al menos un punto.');
+  const x=points.map(p=>p.x),table=points.map(p=>[p.y]);
+  if(x.some(v=>!Number.isFinite(v))||points.some(p=>!Number.isFinite(p.y)))throw new Error('Los datos deben ser finitos.');
+  if(new Set(x).size!==n)throw new Error('Los nodos deben ser distintos.');
+  for(let j=1;j<n;j++)for(let i=0;i<n-j;i++){
+    const difference=x[i+j]-x[i];
+    table[i][j]=(table[i+1][j-1]-table[i][j-1])/difference;
+    if(!Number.isFinite(table[i][j]))throw new Error('El cálculo excede la precisión disponible. Revisa la escala y la separación de los nodos.');
+  }
+  const a=table[0].slice();
+  const expanded=Array(n).fill(0);let basis=[1];
+  for(let k=0;k<n;k++){
+    for(let j=0;j<basis.length;j++)expanded[j]+=a[k]*basis[j];
+    if(k<n-1){const next=Array(basis.length+1).fill(0);for(let j=0;j<basis.length;j++){next[j]-=x[k]*basis[j];next[j+1]+=basis[j];}basis=next;}
+  }
+  return {x,a,table,expanded,points};
+}
+function evaluateNewton(model,value){
+  let result=model.a[model.a.length-1];
+  for(let k=model.a.length-2;k>=0;k--)result=model.a[k]+(value-model.x[k])*result;
+  return result;
+}
+function num(value){return Object.is(value,-0)||value===0?'0':Number(value.toPrecision(12)).toString();}
+function factor(x){return x===0?'x':x<0?'(x + '+num(-x)+')':'(x − '+num(x)+')';}
+function polynomialNewton(model){
+  let result=num(model.a[0]);let product='';
+  for(let k=1;k<model.a.length;k++){product+=(k>1?' · ':'')+factor(model.x[k-1]);if(model.a[k]!==0)result+=(model.a[k]<0?' − ':' + ')+num(Math.abs(model.a[k]))+' · '+product;}
+  return 'P(x) = '+result;
+}
+function polynomialExpanded(coeff){
+  let parts=[];
+  for(let k=coeff.length-1;k>=0;k--){const v=coeff[k];if(v===0)continue;const power=k===0?'':k===1?'x':'x^'+k;const body=(k>0&&Math.abs(v)===1?'':num(Math.abs(v)))+(power&&Math.abs(v)!==1?' · ':'')+power;parts.push({sign:v<0,body});}
+  return 'P(x) = '+(parts.length?parts.map((p,i)=>(i?(p.sign?' − ':' + '):(p.sign?'−':''))+p.body).join(''):'0');
+}
+// Interfaz: solo utiliza texto y nodos DOM; no evalúa código introducido por el usuario.
+let current=null;const $=id=>document.getElementById(id);
+function status(message,error=false){$('status').textContent=message;$('status').className='status'+(error?' error':'');}
+function resetResults(){current=null;for(const id of ['results','tablecard','evalcard'])$(id).hidden=true;$('empty').hidden=false;}
+function calculate(){
+  resetResults();
+  try{
+    const points=parsePoints($('points').value);current=interpolate(points);
+    for(const id of ['results','tablecard','evalcard'])$(id).hidden=false;$('empty').hidden=true;
+    $('degree').textContent=points.length+' punto'+(points.length===1?'':'s')+' · grado máximo '+(points.length-1);
+    $('newton').textContent=polynomialNewton(current);
+    const expandedOK=current.expanded.every(Number.isFinite);
+    $('expanded').textContent=expandedOK?polynomialExpanded(current.expanded):'La forma desarrollada excede el rango numérico. Usa la forma de Newton.';
+    $('coefficients').textContent='Coeficientes de Newton: '+current.a.map((v,i)=>'a'+i+' = '+num(v)).join('; ');
+    renderTable();
+    const residuals=points.map(p=>Math.abs(evaluateNewton(current,p.x)-p.y));
+    $('residual').textContent='Comprobación en los nodos: máximo |P(xᵢ) − yᵢ| = '+num(Math.max(...residuals))+'. Valores mostrados con hasta 12 cifras significativas.';
+    status('Polinomio calculado correctamente. Se conservaron los '+points.length+' nodos en el orden ingresado.');
+    const sorted=current.x.slice().sort((a,b)=>a-b);
+    if(sorted.some((x,i)=>i&&Math.abs(x-sorted[i-1])<1e-10*Math.max(1,Math.abs(x),Math.abs(sorted[i-1])))){
+      $('status').textContent+=' Atención: hay nodos muy cercanos; los resultados pueden ser sensibles al redondeo.';$('status').className='status warning';
+    }
+    evaluate();
+  }catch(e){resetResults();status(e.message,true);}
+}
+function renderTable(){
+  const t=document.createElement('table'),head=t.createTHead().insertRow();
+  ['i','xᵢ','f[xᵢ]',...current.x.slice(1).map((_,j)=>'Orden '+(j+1))].forEach(s=>{const th=document.createElement('th');th.scope='col';th.textContent=s;head.append(th);});
+  const body=t.createTBody();
+  current.points.forEach((p,i)=>{const row=body.insertRow();[i,num(p.x),...current.x.map((_,j)=>current.table[i][j]===undefined?'—':num(current.table[i][j]))].forEach((v,j)=>{const c=row.insertCell();c.textContent=v;if(i===0&&j>=2)c.className='coef';});});
+  $('table').replaceChildren(t);
+}
+function evaluate(){
+  if(!current)return;
+  const raw=$('evaluateAt').value.trim(),x=Number(raw);
+  if(!raw||!Number.isFinite(x)){$('answer').textContent='Ingresa un valor finito de x, con punto decimal.';return;}
+  const y=evaluateNewton(current,x);
+  if(!Number.isFinite(y)){$('answer').textContent='El resultado excede el rango numérico. Prueba un valor de x más cercano a los nodos.';return;}
+  const min=Math.min(...current.x),max=Math.max(...current.x);
+  $('answer').textContent='P('+num(x)+') = '+num(y)+(x<min||x>max?' · Extrapolación: x está fuera de ['+num(min)+', '+num(max)+'].':'');
+}
+function download(){
+  if(!current)return;
+  const rows=current.points.map((p,i)=>[i,num(p.x),...current.x.map((_,j)=>current.table[i][j]===undefined?'—':num(current.table[i][j]))].join('\t'));
+  const content=['INTERPOLACIÓN POLINOMIAL DE NEWTON','Método de diferencias divididas','', 'Puntos (x, y):',...current.points.map(p=>num(p.x)+', '+num(p.y)),'', 'TABLA','i\tx\ty'+current.x.slice(1).map((_,j)=>'\tOrden '+(j+1)).join(''),...rows,'',polynomialNewton(current),$('expanded').textContent,$('coefficients').textContent,$('residual').textContent,'',$('answer').textContent,'','Recurrencia: D[i,j]=(D[i+1,j-1]-D[i,j-1])/(x[i+j]-x[i]).','Con n nodos distintos el grado máximo es n-1.','Cálculo de doble precisión; se muestran hasta 12 cifras significativas.'].join('\n');
+  const url=URL.createObjectURL(new Blob([content],{type:'text/plain;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='Procedimiento_Newton.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+$('calculate').addEventListener('click',calculate);$('evaluate').addEventListener('click',evaluate);
+$('evaluateAt').addEventListener('keydown',e=>{if(e.key==='Enter')evaluate();});
+$('example').addEventListener('click',()=>{$('points').value='-1, 2\n0, 1\n2, 5\n3, 22';$('evaluateAt').value='1';calculate();});
+$('clear').addEventListener('click',()=>{$('points').value='';resetResults();status('Ingresa los puntos para comenzar.');$('points').focus();});
+$('download').addEventListener('click',download);$('print').addEventListener('click',()=>window.print());
+calculate();
+</script></body></html>
